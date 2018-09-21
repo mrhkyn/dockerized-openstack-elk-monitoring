@@ -1,0 +1,177 @@
+version: "3.3"
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.2
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms16g -Xmx16g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+      - elasticsearch-config:/usr/share/elasticsearch/config/
+#    ports:
+#      - 9200:9200
+    networks:
+      br-elk:
+        ipv4_address: 172.26.36.2
+
+  elasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.2
+    container_name: elasticsearch2
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms16g -Xmx16g"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch2-data:/usr/share/elasticsearch/data
+    networks:
+      br-elk:
+        ipv4_address: 172.26.36.3
+
+  elasticsearch3:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.2
+    container_name: elasticsearch3
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms16g -Xmx16g"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch3-data:/usr/share/elasticsearch/data
+    networks:
+      br-elk:
+        ipv4_address: 172.26.36.7
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash-oss:6.2.2
+    container_name: logstash
+    environment:
+      - "LS_JAVA_OPTS=-Xms16g -Xmx16g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - logstash-data:/usr/share/logstash/data
+      - logstash-config:/usr/share/logstash/config/
+      - logstash-pipeline:/usr/share/logstash/pipeline
+      - mapping-res:/usr/share/logstash/mapping
+      - mappingprod-res:/usr/share/logstash/mappingprod
+    networks:
+      br-elk:
+        ipv4_address: 172.26.36.4
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana-oss:6.2.2
+    container_name: kibana
+    environment:
+      SERVER_NAME: kibana
+      SERVER_HOST: 172.26.36.5
+      ELASTICSEARCH_URL: http://172.26.36.2:9200
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - kibana-config:/usr/share/kibana/config/
+    networks:
+      br-elk:
+        ipv4_address: 172.26.36.5
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    environment:
+      - "GF_SERVER_ROOT_URL=http://172.26.36.6"
+      - "GF_SECURITY_ADMIN_PASSWORD=my-pass"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - grafana-config:/var/lib/grafana
+    networks:
+      br-elk:
+        ipv4_address: 172.26.36.6
+
+  mapping:
+    image: mapping:elk
+    container_name: mapping
+    environment:
+      - "ExecPythonName=TenantIpMatch.py"
+      - "OutputName=TenantIpMatches.yaml"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - mapping-src:/SRC
+      - mapping-res:/RES
+    networks:
+      br-elk:
+        ipv4_address: 172.26.36.10
+
+  mappingprod:
+    image: mapping:elk
+    container_name: mappingprod
+    environment:
+      - "ExecPythonName=TenantIpMatch.py"
+      - "OutputName=TenantIpMatches.yaml"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - mappingprod-src:/SRC
+      - mappingprod-res:/RES
+    networks:
+      br-elk:
+        ipv4_address: 172.26.36.11
+
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  elasticsearch-config:
+    driver: local
+  elasticsearch2-data:
+    driver: local
+  elasticsearch3-data:
+    driver: local
+  logstash-config:
+    driver: local
+  logstash-data:
+    driver: local
+  logstash-pipeline:
+    driver: local
+  kibana-config:
+    driver: local
+  grafana-config:
+    driver: local
+  mapping-src:
+    driver: local
+  mapping-res:
+    driver: local
+  mappingprod-src:
+    driver: local
+  mappingprod-res:
+    driver: local
+
+networks:
+  br-elk:
+    external:
+      name: br-elk
