@@ -3,6 +3,7 @@ This is a project for monitoring the performance of servers and network traffic 
 
 ![alt text](images/network_traffic.png?raw=true "tenant based netflow")
 
+P.S. While exporting traffic via softflowd, we might need to use v1.0 rather than 0.9 because the tool does not capable of exporting vlan traffic to logstash properly. This is important especiallay for exporting the netflow obtained for internal traffic such a from br-eth interface.
 
 ## Multi-container for an application - docker-compose.yaml
 The volumes and network were seperated because make any change on the configuration files can be easy without modifying the compose files and adding/removing another container can be applied properly by adding just another ip address.
