@@ -17,6 +17,7 @@ def getIpTenantMatches(fileName):
 
 	sql1 = "select a.tenant_id, b.ip_address from routers as a, ipallocations as b where a.gw_port_id=b.port_id;"
 	sql2 = "select tenant_id, floating_ip_address from floatingips;"
+        sql3 = "select ip_address from ipallocations WHERE NOT ip_address LIKE \"<floating_ip_network>\";"
 
 	try:
 	   cursor.execute(sql1)
@@ -30,6 +31,14 @@ def getIpTenantMatches(fileName):
 	   for row in results:
 	      # print ("\"%s\": \"%s\"" % (row[1], row[0]))	
 	      file.write ("\"%s\": \"%s\"\n" % (row[1], row[0]))
+
+
+           cursor.execute(sql3)
+           results = cursor.fetchall()
+           for row in results:
+              # print ("\"%s\": \"%s\"" % (row[1], row[0]))     
+              file.write ("\"%s\": \"%s\"\n" % (row[0], "internal_traffic"))
+
 
 	except:
 	   print "Error: unable to fecth data"
